@@ -3,7 +3,7 @@
 
 const PIXELS_PER_METER = 14;
 
-const ISLAND = { x: 0, y: 0, radius: 60 };
+const ISLAND = { x: 0, y: 0, radius: 30 };
 const WATER_COLOR = '#1a5276';
 const ISLAND_COLOR = '#2ecc71';
 const ISLAND_SHORE_COLOR = '#f4d03f';
