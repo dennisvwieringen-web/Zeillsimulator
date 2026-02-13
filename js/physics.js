@@ -93,40 +93,40 @@ class Physics {
         boat.prevSailSide = newSailSide;
 
         // --- Steering ---
+        // Calculate target turn rate based on sail trim, then smoothly approach it
+        let targetTurnRate = 0;
+
         if (level === 1) {
-            // Level 1: Mainsail trim affects heading.
-            // More trim (aantrekken) = boat turns into the wind (loeven)
-            // Less trim (vieren) = boat falls off the wind (afvallen)
+            // Level 1: Mainsail trim relative to optimal steers the boat
+            // Aantrekken (more than optimal) = loeven (into wind)
+            // Vieren (less than optimal) = afvallen (off wind)
             const optTrim = (absWindAngle >= IN_IRONS_ANGLE) ? getOptimalTrim(absWindAngle) : 50;
-            const trimOffset = (boat.mainsailTrim - optTrim) / 100;
-            const speedFactor = Math.min(1, 0.2 + Math.abs(boat.speed) * 0.4);
-            const sailTurnForce = trimOffset * 1.2 * speedFactor;
-            boat.turnRate += sailTurnForce * boat.sailSide * dt;
+            const trimOffset = (boat.mainsailTrim - optTrim) / 50; // Normalized: -2 to +2
+            const speedFactor = Math.min(1, 0.3 + Math.abs(boat.speed) * 0.3);
+            targetTurnRate = trimOffset * 0.8 * speedFactor * boat.sailSide;
         } else if (level === 2) {
-            // Level 2: Both sails, combined trim affects heading
+            // Level 2: Both sails combined
             const optTrim = (absWindAngle >= IN_IRONS_ANGLE) ? getOptimalTrim(absWindAngle) : 50;
             const avgTrim = (boat.mainsailTrim * 0.6 + boat.jibTrim * 0.4);
-            const trimOffset = (avgTrim - optTrim) / 100;
-            const speedFactor = Math.min(1, 0.2 + Math.abs(boat.speed) * 0.4);
-            const sailTurnForce = trimOffset * 1.0 * speedFactor;
-            boat.turnRate += sailTurnForce * boat.sailSide * dt;
+            const trimOffset = (avgTrim - optTrim) / 50;
+            const speedFactor = Math.min(1, 0.3 + Math.abs(boat.speed) * 0.3);
+            targetTurnRate = trimOffset * 0.7 * speedFactor * boat.sailSide;
         } else {
-            // Level 3: Sail asymmetry steering (loeven/afvallen)
-            const trimDiff = (boat.mainsailTrim - boat.jibTrim) / 100;
-            const speedFactor = Math.min(1, 0.2 + Math.abs(boat.speed) * 0.4);
-            const sailTurnForce = trimDiff * 0.9 * speedFactor;
-            boat.turnRate += sailTurnForce * boat.sailSide * dt;
+            // Level 3: Sail asymmetry (difference between main and jib)
+            const trimDiff = (boat.mainsailTrim - boat.jibTrim) / 50;
+            const speedFactor = Math.min(1, 0.3 + Math.abs(boat.speed) * 0.3);
+            targetTurnRate = trimDiff * 0.7 * speedFactor * boat.sailSide;
 
             // Fok bak: backed jib pushes bow away from wind
             if (boat.jibBak && boat.jibTrim > JIB_BAK_RELEASE_THRESHOLD) {
-                boat.turnRate += boat.sailSide * 0.8 * dt;
+                targetTurnRate += boat.sailSide * 0.5;
             }
         }
 
-        // Turn rate damping
-        boat.turnRate = Math.max(-boat.maxTurnRate, Math.min(boat.maxTurnRate, boat.turnRate));
-        boat.turnRate *= (1 - 2.5 * dt);
-        if (Math.abs(boat.turnRate) < 0.01) boat.turnRate = 0;
+        // Smoothly approach target turn rate (responsive but not jerky)
+        targetTurnRate = Math.max(-boat.maxTurnRate, Math.min(boat.maxTurnRate, targetTurnRate));
+        boat.turnRate += (targetTurnRate - boat.turnRate) * 3 * dt;
+        if (Math.abs(boat.turnRate) < 0.005) boat.turnRate = 0;
 
         boat.heading += boat.turnRate * dt;
         boat.heading = normalizeAngle(boat.heading);

@@ -181,20 +181,20 @@ class Renderer {
         ctx.quadraticCurveTo(hB, hL * 0.5, hB * 0.8, hL * 0.9);
         ctx.closePath();
 
-        // Hull color: white -> pink -> red with heel
+        // Hull color: green -> yellow -> red with heel
         if (boat.heel > 0.1) {
             const t = Math.min(1, boat.heel);
-            const r = Math.min(255, Math.round(236 + t * 19));
-            const g = Math.max(140, Math.round(240 - t * 100));
-            const b = Math.max(140, Math.round(241 - t * 100));
+            const r = Math.min(255, Math.round(60 + t * 195));
+            const g = Math.max(100, Math.round(180 - t * 80));
+            const b = Math.max(50, Math.round(80 - t * 30));
             ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         } else {
-            ctx.fillStyle = '#ecf0f1';
+            ctx.fillStyle = '#2e8b57';
         }
         ctx.fill();
 
         // Hull outline
-        ctx.strokeStyle = boat.heel > 0.3 ? '#c0392b' : '#7f8c8d';
+        ctx.strokeStyle = boat.heel > 0.3 ? '#c0392b' : '#1a6b3a';
         ctx.lineWidth = 0.15;
         ctx.stroke();
 
