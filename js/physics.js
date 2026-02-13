@@ -92,8 +92,26 @@ class Physics {
         boat.sailSide = newSailSide;
         boat.prevSailSide = newSailSide;
 
-        // --- Level 3: Steering via sail asymmetry ---
-        if (level >= 3) {
+        // --- Steering ---
+        if (level === 1) {
+            // Level 1: Mainsail trim affects heading.
+            // More trim (aantrekken) = boat turns into the wind (loeven)
+            // Less trim (vieren) = boat falls off the wind (afvallen)
+            const optTrim = (absWindAngle >= IN_IRONS_ANGLE) ? getOptimalTrim(absWindAngle) : 50;
+            const trimOffset = (boat.mainsailTrim - optTrim) / 100;
+            const speedFactor = Math.min(1, 0.2 + Math.abs(boat.speed) * 0.4);
+            const sailTurnForce = trimOffset * 1.2 * speedFactor;
+            boat.turnRate += sailTurnForce * boat.sailSide * dt;
+        } else if (level === 2) {
+            // Level 2: Both sails, combined trim affects heading
+            const optTrim = (absWindAngle >= IN_IRONS_ANGLE) ? getOptimalTrim(absWindAngle) : 50;
+            const avgTrim = (boat.mainsailTrim * 0.6 + boat.jibTrim * 0.4);
+            const trimOffset = (avgTrim - optTrim) / 100;
+            const speedFactor = Math.min(1, 0.2 + Math.abs(boat.speed) * 0.4);
+            const sailTurnForce = trimOffset * 1.0 * speedFactor;
+            boat.turnRate += sailTurnForce * boat.sailSide * dt;
+        } else {
+            // Level 3: Sail asymmetry steering (loeven/afvallen)
             const trimDiff = (boat.mainsailTrim - boat.jibTrim) / 100;
             const speedFactor = Math.min(1, 0.2 + Math.abs(boat.speed) * 0.4);
             const sailTurnForce = trimDiff * 0.9 * speedFactor;
