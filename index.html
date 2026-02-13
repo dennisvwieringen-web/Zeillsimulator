@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Zeilcursus Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD overlay -->
+        <div id="hud">
+            <div id="course-name"></div>
+            <div id="state-indicator"></div>
+            <div id="sail-meters">
+                <div class="meter">
+                    <label>Grootzeil</label>
+                    <div class="meter-bar"><div id="mainsail-bar" class="meter-fill"></div></div>
+                    <span id="mainsail-pct">50%</span>
+                </div>
+                <div class="meter">
+                    <label>Fok</label>
+                    <div class="meter-bar"><div id="jib-bar" class="meter-fill"></div></div>
+                    <span id="jib-pct">50%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls legend (keyboard) -->
+        <div id="controls-legend">
+            <div class="legend-title">Besturing</div>
+            <div class="legend-row"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> Sturen</div>
+            <div class="legend-row"><kbd>&uarr;</kbd> <kbd>&darr;</kbd> Grootzeil</div>
+            <div class="legend-row"><kbd>W</kbd> <kbd>S</kbd> Fok</div>
+            <div class="legend-hint">&#9650; = Aantrekken &nbsp; &#9660; = Vieren</div>
+        </div>
+
+        <!-- Touch controls (tablet/phone) -->
+        <div id="touch-controls">
+            <div id="touch-steer">
+                <button class="touch-btn" data-action="steer-left">&#9664;</button>
+                <button class="touch-btn" data-action="steer-right">&#9654;</button>
+            </div>
+            <div id="touch-sails">
+                <div class="touch-sail-group">
+                    <span class="touch-label">Grootzeil</span>
+                    <button class="touch-btn" data-action="main-in">&#9650;</button>
+                    <button class="touch-btn" data-action="main-out">&#9660;</button>
+                </div>
+                <div class="touch-sail-group">
+                    <span class="touch-label">Fok</span>
+                    <button class="touch-btn" data-action="jib-in">&#9650;</button>
+                    <button class="touch-btn" data-action="jib-out">&#9660;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/wind.js"></script>
+    <script src="js/boat.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/physics.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
