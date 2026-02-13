@@ -263,7 +263,7 @@ class Renderer {
         const minAngle = 5 * Math.PI / 180;
         const sailAngle = maxAngle - (trim / 100) * (maxAngle - minAngle);
 
-        const sailLen = hL * 0.75;
+        const sailLen = hL * 0.85; // Larger sail
         const mastX = heelShift * 0.3;
         const endX = mastX + Math.sin(sailAngle) * sailLen * boat.sailSide;
         const endY = mastY + Math.cos(sailAngle) * sailLen;
@@ -275,19 +275,19 @@ class Renderer {
             ctx.beginPath();
             ctx.moveTo(mastX, mastY);
             ctx.lineTo(endX, endY);
-            ctx.strokeStyle = '#5d4e37';
-            ctx.lineWidth = 0.12;
+            ctx.strokeStyle = '#4a3d2a';
+            ctx.lineWidth = 0.18;
             ctx.stroke();
 
             // Sail as a curved surface (belly of the sail)
             const bellySide = boat.sailSide;
-            const bellyAmount = 0.3 + (1 - trim / 100) * 0.2; // More belly when eased
-            const cp1x = mastX + (endX - mastX) * 0.3 + bellySide * bellyAmount * sailLen * 0.3;
+            const bellyAmount = 0.35 + (1 - trim / 100) * 0.25;
+            const cp1x = mastX + (endX - mastX) * 0.3 + bellySide * bellyAmount * sailLen * 0.35;
             const cp1y = mastY + (endY - mastY) * 0.3;
-            const cp2x = mastX + (endX - mastX) * 0.7 + bellySide * bellyAmount * sailLen * 0.2;
+            const cp2x = mastX + (endX - mastX) * 0.7 + bellySide * bellyAmount * sailLen * 0.25;
             const cp2y = mastY + (endY - mastY) * 0.7;
 
-            // Sail fill
+            // Sail fill — solid white, clearly visible
             ctx.beginPath();
             ctx.moveTo(mastX, mastY);
             ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endX, endY);
@@ -296,22 +296,24 @@ class Renderer {
 
             if (state === 'HELLEN') {
                 const red = Math.min(1, error);
-                ctx.fillStyle = `rgba(255, ${Math.round(200 - red * 150)}, ${Math.round(200 - red * 150)}, 0.45)`;
+                ctx.fillStyle = `rgba(255, ${Math.round(180 - red * 130)}, ${Math.round(180 - red * 130)}, 0.85)`;
             } else {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
             }
             ctx.fill();
 
-            // Sail outline (luff)
+            // Sail outline
             ctx.beginPath();
             ctx.moveTo(mastX, mastY);
             ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endX, endY);
+            ctx.lineTo(mastX, endY * 0.9 + mastY * 0.1);
+            ctx.closePath();
             if (state === 'HELLEN') {
-                ctx.strokeStyle = `rgba(255, ${Math.max(60, Math.round(180 - error * 150))}, ${Math.max(60, Math.round(180 - error * 150))}, 0.9)`;
+                ctx.strokeStyle = `rgba(220, ${Math.max(40, Math.round(100 - error * 80))}, ${Math.max(40, Math.round(100 - error * 80))}, 1)`;
             } else {
-                ctx.strokeStyle = 'rgba(240, 240, 240, 0.9)';
+                ctx.strokeStyle = 'rgba(180, 180, 190, 0.9)';
             }
-            ctx.lineWidth = 0.14;
+            ctx.lineWidth = 0.18;
             ctx.stroke();
 
             // Battens (zeillatten) for detail
@@ -319,13 +321,13 @@ class Renderer {
                 const t = i / 4;
                 const bx1 = mastX + (endX - mastX) * t * 0.1;
                 const by1 = mastY + (endY - mastY) * t;
-                const bx2 = mastX + (endX - mastX) * t + bellySide * bellyAmount * sailLen * 0.15 * (1 - Math.abs(t - 0.5));
+                const bx2 = mastX + (endX - mastX) * t + bellySide * bellyAmount * sailLen * 0.18 * (1 - Math.abs(t - 0.5));
                 const by2 = by1;
                 ctx.beginPath();
                 ctx.moveTo(bx1, by1);
                 ctx.lineTo(bx2, by2);
-                ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
-                ctx.lineWidth = 0.04;
+                ctx.strokeStyle = 'rgba(160, 160, 170, 0.5)';
+                ctx.lineWidth = 0.06;
                 ctx.stroke();
             }
         }
@@ -340,86 +342,81 @@ class Renderer {
         const minAngle = 5 * Math.PI / 180;
         const sailAngle = maxAngle - (trim / 100) * (maxAngle - minAngle);
 
-        const sailLen = hL * 0.5;
+        const sailLen = hL * 0.65; // Larger jib sail
         const mastX = heelShift * 0.3;
         const bowX = 0;
         const bowY = -hL * 0.95; // Forestay attachment at bow
         const endX = mastX + Math.sin(sailAngle) * sailLen * boat.sailSide;
-        const endY = mastY - Math.cos(sailAngle) * sailLen * 0.3 + mastY * 0.1;
+        const endY = mastY - Math.cos(sailAngle) * sailLen * 0.2;
 
         // Forestay (from masthead to bow)
         ctx.beginPath();
         ctx.moveTo(mastX, mastY - 0.3);
         ctx.lineTo(bowX, bowY);
-        ctx.strokeStyle = 'rgba(100, 100, 100, 0.3)';
-        ctx.lineWidth = 0.05;
+        ctx.strokeStyle = 'rgba(120, 120, 120, 0.5)';
+        ctx.lineWidth = 0.07;
         ctx.stroke();
 
         // Jib: triangle from bow to mast to clew
         const clewX = endX;
-        const clewY = mastY + sailLen * 0.15; // Clew slightly below mast
+        const clewY = mastY + sailLen * 0.1;
 
         if (state === 'KILLEN') {
             this.drawKillenSail(ctx, bowX, bowY, clewX, clewY, error, sailLen, 'jib');
-            // Also draw luff line wavy
             this.drawKillenSail(ctx, mastX, mastY - 0.2, clewX, clewY, error * 0.5, sailLen * 0.5, 'jib');
         } else {
             const bellySide = boat.sailSide;
-            const bellyAmount = 0.25 + (1 - trim / 100) * 0.15;
+            const bellyAmount = 0.3 + (1 - trim / 100) * 0.2;
 
-            // Jib fill: triangle bow -> clew -> tack
+            // Jib fill: triangle bow -> mast -> clew with belly curve
             ctx.beginPath();
             ctx.moveTo(bowX, bowY);
             // Luff (front edge, bow to mast area)
             ctx.lineTo(mastX, mastY - 0.2);
             // Leech (back edge with belly)
-            const cpx = mastX + bellySide * bellyAmount * sailLen * 0.4;
+            const cpx = mastX + bellySide * bellyAmount * sailLen * 0.5;
             const cpy = (mastY + clewY) / 2;
             ctx.quadraticCurveTo(cpx, cpy, clewX, clewY);
             // Foot back to bow area
             ctx.lineTo(bowX, bowY);
             ctx.closePath();
 
+            // Crème/beige tint to distinguish from white mainsail
             if (state === 'HELLEN') {
                 const red = Math.min(1, error);
-                ctx.fillStyle = `rgba(255, ${Math.round(200 - red * 150)}, ${Math.round(200 - red * 150)}, 0.35)`;
+                ctx.fillStyle = `rgba(255, ${Math.round(180 - red * 130)}, ${Math.round(170 - red * 130)}, 0.8)`;
             } else {
-                ctx.fillStyle = 'rgba(245, 245, 255, 0.3)';
+                ctx.fillStyle = 'rgba(255, 248, 230, 0.78)';
             }
             ctx.fill();
 
-            // Leech outline
-            ctx.beginPath();
-            ctx.moveTo(mastX, mastY - 0.2);
-            ctx.quadraticCurveTo(cpx, cpy, clewX, clewY);
-            if (state === 'HELLEN') {
-                ctx.strokeStyle = `rgba(255, ${Math.max(60, Math.round(180 - error * 150))}, ${Math.max(60, Math.round(180 - error * 150))}, 0.9)`;
-            } else {
-                ctx.strokeStyle = 'rgba(230, 230, 240, 0.85)';
-            }
-            ctx.lineWidth = 0.1;
-            ctx.stroke();
-
-            // Luff line (bow to mast)
+            // Full outline of the jib
             ctx.beginPath();
             ctx.moveTo(bowX, bowY);
             ctx.lineTo(mastX, mastY - 0.2);
-            ctx.strokeStyle = 'rgba(220, 220, 230, 0.6)';
-            ctx.lineWidth = 0.06;
+            ctx.quadraticCurveTo(cpx, cpy, clewX, clewY);
+            ctx.lineTo(bowX, bowY);
+            ctx.closePath();
+            if (state === 'HELLEN') {
+                ctx.strokeStyle = `rgba(220, ${Math.max(40, Math.round(100 - error * 80))}, ${Math.max(40, Math.round(80 - error * 60))}, 1)`;
+            } else {
+                ctx.strokeStyle = 'rgba(200, 190, 160, 0.9)';
+            }
+            ctx.lineWidth = 0.16;
             ctx.stroke();
 
             // Fok bak indicator: if jib is backing, draw it mirrored and darker
             if (boat.jibBak) {
-                ctx.fillStyle = 'rgba(255, 100, 50, 0.15)';
+                ctx.fillStyle = 'rgba(255, 100, 50, 0.3)';
                 ctx.beginPath();
                 ctx.moveTo(bowX, bowY);
                 ctx.lineTo(mastX, mastY - 0.2);
-                const bakCpx = mastX - bellySide * bellyAmount * sailLen * 0.4;
-                ctx.quadraticCurveTo(bakCpx, cpy, mastX - bellySide * sailLen * 0.3, clewY);
+                const bakCpx = mastX - bellySide * bellyAmount * sailLen * 0.5;
+                ctx.quadraticCurveTo(bakCpx, cpy, mastX - bellySide * sailLen * 0.35, clewY);
                 ctx.closePath();
                 ctx.fill();
-                ctx.strokeStyle = 'rgba(255, 80, 30, 0.7)';
-                ctx.lineWidth = 0.1;
+                ctx.strokeStyle = 'rgba(255, 80, 30, 0.8)';
+                ctx.lineWidth = 0.14;
                 ctx.stroke();
             }
         }
