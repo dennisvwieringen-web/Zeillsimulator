@@ -8,10 +8,35 @@
 </head>
 <body>
     <div id="game-container">
+        <!-- Start screen -->
+        <div id="start-screen">
+            <div class="start-box">
+                <h1>⛵ Zeilsimulator</h1>
+                <p class="start-subtitle">Leer zeilen met Bob!</p>
+                <div class="level-buttons">
+                    <button class="level-btn" data-level="1">
+                        <span class="level-num">Level 1</span>
+                        <span class="level-title">Grootzeil</span>
+                        <span class="level-desc">Leer de boot besturen met alleen het grootzeil</span>
+                    </button>
+                    <button class="level-btn" data-level="2">
+                        <span class="level-num">Level 2</span>
+                        <span class="level-title">Grootzeil + Fok</span>
+                        <span class="level-desc">Stuur met grootzeil en fokzeil apart</span>
+                    </button>
+                    <button class="level-btn" data-level="3">
+                        <span class="level-num">Level 3</span>
+                        <span class="level-title">Vrij zeilen</span>
+                        <span class="level-desc">Loeven, afvallen en koers bepalen</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <canvas id="gameCanvas"></canvas>
 
         <!-- HUD overlay -->
-        <div id="hud">
+        <div id="hud" style="display:none;">
             <div id="course-name"></div>
             <div id="state-indicator"></div>
             <div id="sail-meters">
@@ -20,7 +45,7 @@
                     <div class="meter-bar"><div id="mainsail-bar" class="meter-fill"></div></div>
                     <span id="mainsail-pct">50%</span>
                 </div>
-                <div class="meter">
+                <div class="meter" id="jib-meter">
                     <label>Fok</label>
                     <div class="meter-bar"><div id="jib-bar" class="meter-fill"></div></div>
                     <span id="jib-pct">50%</span>
@@ -34,6 +59,7 @@
                 <h1>💥 Gestrand!</h1>
                 <p>Bob zegt: Je bent op het eiland gevaren!</p>
                 <button id="restart-btn">Opnieuw beginnen</button>
+                <button id="menu-btn">Terug naar menu</button>
             </div>
         </div>
 
@@ -55,7 +81,7 @@
                     <button class="touch-btn touch-btn-large" data-action="main-in">&#9650;</button>
                     <button class="touch-btn touch-btn-large" data-action="main-out">&#9660;</button>
                 </div>
-                <div class="touch-sail-group">
+                <div class="touch-sail-group" id="touch-jib-group">
                     <span class="touch-label">Fok</span>
                     <button class="touch-btn touch-btn-large" data-action="jib-in">&#9650;</button>
                     <button class="touch-btn touch-btn-large" data-action="jib-out">&#9660;</button>

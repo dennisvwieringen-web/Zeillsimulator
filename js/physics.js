@@ -1,14 +1,12 @@
 // Physics engine - implements Dutch sailing theory from "Het Zeilboek"
 //
-// Fok bak rule: When tacking/gybing, the jib does NOT automatically switch sides.
-// The player must ease the jib sheet to 0% (fully loose), then the wind pushes
-// it to the new side, and the player sheets it in again on the new side.
-// If they don't, the jib stands "bak" (backed) = against the wind on the wrong side.
-// Consequence: massive drag, pushes the bow away from the wind.
+// Level 1: Only mainsail, fok auto-follows at optimal. No steering.
+// Level 2: Mainsail + fok independently. No steering.
+// Level 3: Mainsail + fok + loeven/afvallen via sail asymmetry.
 
 const SAIL_TRIM_SPEED = 50;
 const IN_IRONS_ANGLE = Math.PI / 4; // 45 degrees no-go zone
-const JIB_BAK_RELEASE_THRESHOLD = 8; // Jib must be eased below this % to release bak
+const JIB_BAK_RELEASE_THRESHOLD = 8;
 
 function normalizeAngle(angle) {
     while (angle > Math.PI) angle -= 2 * Math.PI;
@@ -53,18 +51,19 @@ function evaluateSail(currentTrim, optimalTrim) {
 }
 
 class Physics {
-    update(boat, input, dt) {
-        // === LEVEL 1: Trim both sails independently ===
-        // Player adjusts grootzeil and fok separately.
-        // Speed depends on how well BOTH sails are trimmed.
-        // Boat heading stays mostly fixed (no loeven/afvallen yet).
-        // Slight natural drift to keep it interesting.
+    update(boat, input, dt, level) {
+        level = level || 1;
 
-        // --- Sail trimming (independent) ---
+        // --- Sail trimming ---
         const mainAdj = input.getMainsailAdjust();
         if (mainAdj !== 0) boat.adjustMainsail(mainAdj * SAIL_TRIM_SPEED * dt);
-        const jibAdj = input.getJibAdjust();
-        if (jibAdj !== 0) boat.adjustJib(jibAdj * SAIL_TRIM_SPEED * dt);
+
+        if (level >= 2) {
+            // Level 2+: fok is independently controlled
+            const jibAdj = input.getJibAdjust();
+            if (jibAdj !== 0) boat.adjustJib(jibAdj * SAIL_TRIM_SPEED * dt);
+        }
+        // Level 1: fok will be set to optimal automatically below
 
         // --- Wind angle ---
         const relativeWindAngle = normalizeAngle(Wind.direction - boat.heading);
@@ -75,9 +74,44 @@ class Physics {
 
         // Determine sail side based on wind
         const newSailSide = relativeWindAngle > 0 ? -1 : 1;
+
+        // --- Fok bak detection (Level 3 only) ---
+        if (level >= 3) {
+            if (newSailSide !== boat.prevSailSide && boat.prevSailSide !== 0) {
+                if (boat.jibTrim > JIB_BAK_RELEASE_THRESHOLD) {
+                    boat.jibBak = true;
+                }
+            }
+            if (boat.jibBak && boat.jibTrim <= JIB_BAK_RELEASE_THRESHOLD) {
+                boat.jibBak = false;
+            }
+        } else {
+            boat.jibBak = false;
+        }
+
         boat.sailSide = newSailSide;
         boat.prevSailSide = newSailSide;
-        boat.jibBak = false; // No fok bak in level 1
+
+        // --- Level 3: Steering via sail asymmetry ---
+        if (level >= 3) {
+            const trimDiff = (boat.mainsailTrim - boat.jibTrim) / 100;
+            const speedFactor = Math.min(1, 0.2 + Math.abs(boat.speed) * 0.4);
+            const sailTurnForce = trimDiff * 0.9 * speedFactor;
+            boat.turnRate += sailTurnForce * boat.sailSide * dt;
+
+            // Fok bak: backed jib pushes bow away from wind
+            if (boat.jibBak && boat.jibTrim > JIB_BAK_RELEASE_THRESHOLD) {
+                boat.turnRate += boat.sailSide * 0.8 * dt;
+            }
+        }
+
+        // Turn rate damping
+        boat.turnRate = Math.max(-boat.maxTurnRate, Math.min(boat.maxTurnRate, boat.turnRate));
+        boat.turnRate *= (1 - 2.5 * dt);
+        if (Math.abs(boat.turnRate) < 0.01) boat.turnRate = 0;
+
+        boat.heading += boat.turnRate * dt;
+        boat.heading = normalizeAngle(boat.heading);
 
         // --- In de wind (no-go zone) ---
         if (absWindAngle < IN_IRONS_ANGLE) {
@@ -89,7 +123,7 @@ class Physics {
             boat.heel = 0;
             boat.optimalTrim = 0;
 
-            // Decelerate
+            // Decelerate and drift backward
             boat.speed *= (1 - 1.0 * dt);
             if (boat.speed < 0.1) {
                 boat.speed += -0.3 * dt;
@@ -98,30 +132,48 @@ class Physics {
         } else {
             boat.state = 'SAILING';
 
-            // Optimal trim for current wind angle
             const optimalTrim = getOptimalTrim(absWindAngle);
             boat.optimalTrim = optimalTrim;
 
-            // Evaluate each sail independently
+            // Level 1: fok auto-trims to optimal
+            if (level === 1) {
+                // Smoothly move fok toward optimal
+                const jibDiff = optimalTrim - boat.jibTrim;
+                boat.jibTrim += jibDiff * 3 * dt;
+            }
+
+            // Evaluate sails
             const mainEval = evaluateSail(boat.mainsailTrim, optimalTrim);
-            const jibEval = evaluateSail(boat.jibTrim, optimalTrim);
+
+            let jibEval;
+            if (boat.jibBak) {
+                jibEval = {
+                    state: 'KILLEN',
+                    efficiency: -0.3,
+                    error: 1
+                };
+            } else {
+                jibEval = evaluateSail(boat.jibTrim, optimalTrim);
+            }
 
             boat.mainsailState = mainEval.state;
             boat.jibState = jibEval.state;
             boat.mainsailError = mainEval.error;
             boat.jibError = jibEval.error;
 
-            // Combined efficiency (mainsail 60%, jib 40%)
-            const totalEfficiency = Math.max(0, mainEval.efficiency * 0.6 + jibEval.efficiency * 0.4);
+            // Combined efficiency
+            const mainWeight = (level === 1) ? 0.85 : 0.6;
+            const jibWeight = (level === 1) ? 0.15 : 0.4;
+            const totalEfficiency = Math.max(0, mainEval.efficiency * mainWeight + jibEval.efficiency * jibWeight);
 
             // Heel from over-trimming
             let heelAmount = 0;
             if (mainEval.state === 'HELLEN') heelAmount += mainEval.error * 0.6;
-            if (jibEval.state === 'HELLEN') heelAmount += jibEval.error * 0.4;
+            if (!boat.jibBak && jibEval.state === 'HELLEN') heelAmount += jibEval.error * 0.4;
             boat.heel += (heelAmount - boat.heel) * 4 * dt;
             boat.drift += (heelAmount * 0.3 - boat.drift) * 2 * dt;
 
-            // Speed: angle factor (how well this point of sail works)
+            // Speed: angle factor
             let angleFactor;
             if (absWindAngle < Math.PI / 3) {
                 angleFactor = 0.5 + (absWindAngle - IN_IRONS_ANGLE) / (Math.PI / 3 - IN_IRONS_ANGLE) * 0.3;
@@ -134,20 +186,21 @@ class Physics {
             }
 
             const maxBoatSpeed = 4.5;
+            let targetSpeed = maxBoatSpeed * angleFactor * totalEfficiency;
+
+            // Fok bak penalty (level 3)
+            if (boat.jibBak && boat.jibTrim > JIB_BAK_RELEASE_THRESHOLD) {
+                const bakDrag = (boat.jibTrim / 100) * 0.7;
+                targetSpeed *= (1 - bakDrag);
+            }
+
             const heelPenalty = 1 - heelAmount * 0.5;
-            const finalTarget = Math.max(0, maxBoatSpeed * angleFactor * totalEfficiency * heelPenalty);
+            const finalTarget = Math.max(0, targetSpeed * heelPenalty);
 
             // Momentum (600kg Valk)
             const rate = boat.speed < finalTarget ? 0.4 : 0.6;
             boat.speed += (finalTarget - boat.speed) * rate * dt;
         }
-
-        // --- Slight natural heading drift (keeps it interesting) ---
-        // Boat gently drifts, player must keep sails right to maintain course
-        boat.turnRate *= (1 - 3 * dt);
-        if (Math.abs(boat.turnRate) < 0.01) boat.turnRate = 0;
-        boat.heading += boat.turnRate * dt;
-        boat.heading = normalizeAngle(boat.heading);
 
         boat.speed = Math.max(-0.5, Math.min(4.5, boat.speed));
 

@@ -90,6 +90,90 @@ body {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
 }
 
+/* === Start screen === */
+#start-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #0d3b66 0%, #1a5276 40%, #1e6f8f 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+
+.start-box {
+    text-align: center;
+    color: #fff;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.start-box h1 {
+    font-size: 42px;
+    margin-bottom: 8px;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.start-subtitle {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 32px;
+}
+
+.level-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.level-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px 22px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    text-align: left;
+}
+
+.level-btn:hover {
+    background: rgba(79, 195, 247, 0.2);
+    border-color: rgba(79, 195, 247, 0.6);
+    transform: translateY(-2px);
+}
+
+.level-btn:active {
+    background: rgba(79, 195, 247, 0.3);
+    transform: translateY(0);
+}
+
+.level-num {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #4fc3f7;
+    letter-spacing: 1px;
+}
+
+.level-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 4px 0;
+}
+
+.level-desc {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
 /* === Game Over overlay === */
 #game-over {
     position: absolute;
@@ -139,6 +223,22 @@ body {
 
 #restart-btn:hover {
     background: #c0392b;
+}
+
+#menu-btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+
+#menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* === Controls legend (desktop only) === */
