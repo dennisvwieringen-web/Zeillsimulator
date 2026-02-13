@@ -5,7 +5,11 @@
     const renderer = new Renderer(canvas);
     const input = new Input();
     const physics = new Physics();
-    const boat = new Boat(0, 100);
+
+    const START_X = 0;
+    const START_Y = 100;
+    let boat = new Boat(START_X, START_Y);
+    let gameOver = false;
 
     // HUD elements
     const courseNameEl = document.getElementById('course-name');
@@ -14,6 +18,38 @@
     const mainsailPctEl = document.getElementById('mainsail-pct');
     const jibBarEl = document.getElementById('jib-bar');
     const jibPctEl = document.getElementById('jib-pct');
+    const gameOverEl = document.getElementById('game-over');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Restart button
+    restartBtn.addEventListener('click', restartGame);
+    restartBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        restartGame();
+    }, { passive: false });
+
+    function restartGame() {
+        boat = new Boat(START_X, START_Y);
+        gameOver = false;
+        gameOverEl.style.display = 'none';
+        lastTime = 0;
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Collision detection with island
+    function checkIslandCollision() {
+        const dx = boat.x - ISLAND.x;
+        const dy = boat.y - ISLAND.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        // Boat collides when center reaches island shore (radius + small buffer)
+        return dist < ISLAND.radius + 5;
+    }
+
+    function triggerGameOver() {
+        gameOver = true;
+        boat.speed = 0;
+        gameOverEl.style.display = 'flex';
+    }
 
     function getCourseName(absWindAngleDeg) {
         if (absWindAngleDeg < 30) return 'In de Wind';
@@ -61,10 +97,20 @@
     let lastTime = 0;
 
     function gameLoop(timestamp) {
+        if (gameOver) return;
+
         const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.05) : 0.016;
         lastTime = timestamp;
 
         physics.update(boat, input, dt);
+
+        // Check collision with island
+        if (checkIslandCollision()) {
+            triggerGameOver();
+            renderer.render(boat, dt);
+            return;
+        }
+
         updateHUD();
         renderer.render(boat, dt);
 
