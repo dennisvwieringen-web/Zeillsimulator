@@ -230,25 +230,7 @@ class Renderer {
         this.drawMainsail(ctx, boat, mastY, hL, hB, heelShift);
         this.drawJib(ctx, boat, mastY, hL, hB, heelShift);
 
-        // --- Rudder ---
-        const rudderAngle = -boat.turnRate * 0.35;
-        ctx.save();
-        ctx.translate(heelShift * 0.2, hL * 0.88);
-        ctx.rotate(rudderAngle);
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0, hL * 0.3);
-        ctx.strokeStyle = '#6d4c2a';
-        ctx.lineWidth = 0.13;
-        ctx.stroke();
-        // Tiller
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(-Math.sin(rudderAngle) * hL * 0.25, -hL * 0.15);
-        ctx.strokeStyle = '#8B5E3C';
-        ctx.lineWidth = 0.08;
-        ctx.stroke();
-        ctx.restore();
+        // No rudder — steering is done via sail trim only
 
         ctx.restore(); // undo boat transform
     }

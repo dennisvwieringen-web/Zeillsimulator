@@ -54,20 +54,26 @@ function evaluateSail(currentTrim, optimalTrim) {
 
 class Physics {
     update(boat, input, dt) {
-        // --- Steering ---
-        const steerDir = input.getSteering();
-        if (steerDir !== 0) {
-            const speedFactor = Math.min(1, 0.3 + Math.abs(boat.speed) * 0.3);
-            boat.turnRate += steerDir * boat.turnAccel * speedFactor * dt;
-            boat.turnRate = Math.max(-boat.maxTurnRate, Math.min(boat.maxTurnRate, boat.turnRate));
-        } else {
-            boat.turnRate *= (1 - 3 * dt);
-            if (Math.abs(boat.turnRate) < 0.01) boat.turnRate = 0;
-        }
+        // --- Steering via sail trim only (no rudder) ---
+        // Sail asymmetry creates turning force:
+        // More mainsail than fok = boat turns INTO the wind (loeven)
+        // More fok than mainsail = boat turns AWAY from wind (afvallen)
+        const trimDiff = (boat.mainsailTrim - boat.jibTrim) / 100; // -1 to +1
+        const speedFactor = Math.min(1, 0.2 + Math.abs(boat.speed) * 0.4);
+
+        // Turning force from sail balance
+        // Positive trimDiff (more main) = turn to windward (into wind)
+        // sailSide determines which way the sails are: affects turn direction
+        const sailTurnForce = trimDiff * 0.9 * speedFactor;
+        boat.turnRate += sailTurnForce * boat.sailSide * dt;
+        boat.turnRate = Math.max(-boat.maxTurnRate, Math.min(boat.maxTurnRate, boat.turnRate));
+
+        // Natural damping (water resistance on hull)
+        boat.turnRate *= (1 - 2.5 * dt);
+        if (Math.abs(boat.turnRate) < 0.01) boat.turnRate = 0;
 
         // Fok bak: backed jib pushes bow away from wind
         if (boat.jibBak && boat.jibTrim > JIB_BAK_RELEASE_THRESHOLD) {
-            // Force bow away from wind (opposite of sail side)
             boat.turnRate += boat.sailSide * 0.8 * dt;
         }
 

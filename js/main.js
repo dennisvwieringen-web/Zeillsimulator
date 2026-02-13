@@ -44,16 +44,16 @@
         jibBarEl.style.background = getSailBarColor(boat.jibState);
 
         if (boat.state === 'IN_IRONS') {
-            stateIndicatorEl.textContent = 'In de wind! Geen vaart.';
+            stateIndicatorEl.textContent = 'Bob zegt: In de wind! Geen vaart.';
             stateIndicatorEl.style.color = '#e74c3c';
         } else if (boat.mainsailState === 'KILLEN' || boat.jibState === 'KILLEN') {
-            stateIndicatorEl.textContent = 'Zeilen killen - meer aantrekken!';
+            stateIndicatorEl.textContent = 'Bob zegt: Zeilen killen - meer aantrekken!';
             stateIndicatorEl.style.color = '#f39c12';
         } else if (boat.mainsailState === 'HELLEN' || boat.jibState === 'HELLEN') {
-            stateIndicatorEl.textContent = 'Boot helt! Zeilen vieren!';
+            stateIndicatorEl.textContent = 'Bob zegt: Boot helt! Zeilen vieren!';
             stateIndicatorEl.style.color = '#e74c3c';
         } else {
-            stateIndicatorEl.textContent = 'Goed getrimd';
+            stateIndicatorEl.textContent = 'Bob zegt: Goed getrimd!';
             stateIndicatorEl.style.color = '#2ecc71';
         }
     }
