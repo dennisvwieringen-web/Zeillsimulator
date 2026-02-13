@@ -1,9 +1,9 @@
-// Wind configuration - constant northerly wind
+// Wind configuration - constant southerly wind
 // Direction in radians: 0 = North (top of screen), clockwise
-// Wind blows FROM the north, so it pushes SOUTH
+// Wind blows FROM the south (bottom of screen), so it pushes NORTH (up)
 
 const Wind = {
-    direction: 0,
+    direction: Math.PI,
     force: 5,
 
     getDirectionDegrees() {

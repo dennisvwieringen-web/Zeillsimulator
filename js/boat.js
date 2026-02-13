@@ -8,7 +8,7 @@ class Boat {
         this.y = y;
 
         // Heading in radians (0 = north/up, clockwise)
-        this.heading = Math.PI; // Start facing south
+        this.heading = 0; // Start facing north (up)
 
         this.speed = 0; // m/s
 
